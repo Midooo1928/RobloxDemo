@@ -166,49 +166,6 @@ end
 local Character = {}
 
 --[[
-    Replaces single Motor6D joint with physics constraint
-    @param joint: Motor6D joint to replace
-]]
-local function ReplaceJoint(joint)
-	-- Create replacement attachments
-	local att0 = Instance.new("Attachment")  -- Parent part attachment
-	local att1 = Instance.new("Attachment")  -- Child part attachment
-	att0.CFrame = joint.C0                   -- Maintain original position
-	att1.CFrame = joint.C1                   -- Maintain original position
-
-	-- Create physics constraint
-	local constraint = Instance.new("BallSocketConstraint")
-	constraint.Attachment0 = att0            -- Connect to parent part
-	constraint.Attachment1 = att1            -- Connect to child part
-	constraint.TwistLimitsEnabled = true     -- Prevent unnatural rotations
-
-	-- Parent components and disable original joint
-	att0.Parent = joint.Part0
-	att1.Parent = joint.Part1
-	constraint.Parent = joint.Parent
-	joint.Enabled = false                    -- Disable original joint
-end
-
---[[
-    Enables ragdoll physics for character
-    @param char: Character model to modify
-]]
-function Character.EnableRagdoll(char)
-	-- Process all descendant joints
-	for _, joint in ipairs(char:GetDescendants()) do
-		if joint:IsA("Motor6D") then
-			ReplaceJoint(joint) -- Replace each joint with constraint
-		end
-	end
-
-	-- Update humanoid state on client
-	SERVICES.Remote.SetHumanState:FireClient(
-		game.Players:GetPlayerFromCharacter(char), -- Get player from character
-		Enum.HumanoidStateType.Physics -- Enable physics simulation
-	)
-end
-
---[[
     Scales R15 character body proportions
     @param humanoid: Humanoid reference
     @param scale: Multiplier for body size
@@ -309,11 +266,6 @@ function Commands.wave(player)
 	animation:Play() -- Start playback
 	task.wait(5) 
 	animation:Stop() -- Stop animation after 5 seconds to avoid playing the animation infinitely
-end
-
---[[ Command: /ragdoll - Enables physics simulation ]]
-function Commands.ragdoll(player)
-	Character.EnableRagdoll(player.Character) -- Convert joints to constraints
 end
 
 --[[ Internal meteor creation function ]]
